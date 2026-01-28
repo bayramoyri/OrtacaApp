@@ -1,138 +1,71 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OrtacaApp - Ortaca Haritası</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+    <title>Ortaca App</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        /* Basic Reset */
+        body, h1, h2, h3, p { margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; }
+        /* Header Styles */
+        header { background: linear-gradient(to right, #4CAF50, #81C784); padding: 20px; text-align: center; }
+        nav a { margin: 0 15px; color: white; text-decoration: none; }
+        /* Layout Styles */
+        .container { display: flex; }
+        .sidebar { width: 200px; padding: 15px; background: #f0f0f0; }
+        .map { flex: 1; height: 500px; }
+        .info-panel { padding: 15px; background: #ffffff; }
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgb(0,0,0); opacity: 0.5; }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; }
+    </style>
 </head>
 <body>
+    <header>
+        <nav>
+            <a href="#home">Home</a>
+            <a href="#about">About</a>
+            <a href="#places">Places</a>
+            <a href="#contact">Contact</a>
+        </nav>
+    </header>
     <div class="container">
-        <header class="header">
-            <div class="logo-section">
-                <h1><i class="fas fa-map"></i> OrtacaApp</h1>
-                <p>Ortaca'nın Rehberi</p>
-            </div>
-            <div class="search-section">
-                <input type="text" id="searchInput" placeholder="Mekan ara...">
-                <button onclick="searchPlace()"><i class="fas fa-search"></i></button>
-            </div>
-            <div class="user-section">
-                <button onclick="toggleProfile()" class="profile-btn">
-                    <i class="fas fa-user-circle"></i> Profil
-                </button>
-            </div>
-        </header>
-
-        <div class="main-content">
-            <aside class="sidebar">
-                <nav class="categories">
-                    <h3>Kategoriler</h3>
-                    <button class="category-btn active" onclick="filterByCategory('all')">
-                        <i class="fas fa-th"></i> Tümü
-                    </button>
-                    <button class="category-btn" onclick="filterByCategory('restaurant')">
-                        <i class="fas fa-utensils"></i> Restoranlar
-                    </button>
-                    <button class="category-btn" onclick="filterByCategory('cafe')">
-                        <i class="fas fa-coffee"></i> Kahve Dükkanları
-                    </button>
-                    <button class="category-btn" onclick="filterByCategory('hotel')">
-                        <i class="fas fa-hotel"></i> Oteller
-                    </button>
-                    <button class="category-btn" onclick="filterByCategory('gas')">
-                        <i class="fas fa-gas-pump"></i> Benzin İstasyonları
-                    </button>
-                    <button class="category-btn" onclick="filterByCategory('jewelry')">
-                        <i class="fas fa-ring"></i> Kuyumcular
-                    </button>
-                    <button class="category-btn" onclick="filterByCategory('tourism')">
-                        <i class="fas fa-camera"></i> Turistik Yerler
-                    </button>
-                </nav>
-
-                <div class="featured-section">
-                    <h3>Öne Çıkan Mekanlar</h3>
-                    <div id="featuredPlaces"></div>
-                </div>
-
-                <button class="add-place-btn" onclick="openAddPlaceModal()">
-                    <i class="fas fa-plus"></i> Mekan Ekle
-                </button>
-            </aside>
-
-            <div class="map-container">
-                <div id="map"></div>
-            </div>
-
-            <aside class="details-panel hidden" id="detailsPanel">
-                <button class="close-details" onclick="closeDetailsPanel()">
-                    <i class="fas fa-times"></i>
-                </button>
-                <div id="placeDetails"></div>
-            </aside>
+        <div class="sidebar">
+            <h2>Categories</h2>
+            <ul>
+                <li>Restaurants</li>
+                <li>Parks</li>
+                <li>Museums</li>
+                <!-- More categories -->
+            </ul>
+        </div>
+        <div class="map" id="map"></div>
+        <div class="info-panel">
+            <h2>Place Information</h2>
+            <p>Select a place on the map to see details.</p>
         </div>
     </div>
-
+    <!-- Modal for Adding Places -->
     <div id="addPlaceModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeAddPlaceModal()">&times;</span>
-            <h2>Yeni Mekan Ekle</h2>
-            <form id="addPlaceForm">
-                <input type="text" id="placeName" placeholder="Mekan Adı" required>
-                <textarea id="placeDescription" placeholder="Açıklama" required></textarea>
-                <select id="placeCategory" required>
-                    <option value="">Kategori Seçin</option>
-                    <option value="restaurant">Restoran</option>
-                    <option value="cafe">Kahve Dükkanı</option>
-                    <option value="hotel">Otel</option>
-                    <option value="gas">Benzin İstasyonu</option>
-                    <option value="jewelry">Kuyumcu</option>
-                    <option value="tourism">Turistik Yer</option>
-                </select>
-                <input type="text" id="placeAddress" placeholder="Adres" required>
-                <input type="tel" id="placePhone" placeholder="Telefon">
-                <input type="text" id="placeWebsite" placeholder="Website (isteğe bağlı)">
-                <div class="modal-buttons">
-                    <button type="submit">Mekan Ekle</button>
-                    <button type="button" onclick="closeAddPlaceModal()">İptal</button>
-                </div>
+            <span onclick="document.getElementById('addPlaceModal').style.display='none'" style="cursor:pointer;">&times;</span>
+            <h2>Add Place</h2>
+            <form>
+                <label for="placeName">Place Name:</label>
+                <input type="text" id="placeName" required>
+                <button type="submit">Add</button>
             </form>
         </div>
     </div>
-
-    <div id="ratingModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeRatingModal()">&times;</span>
-            <h2>Değerlendirme Yap</h2>
-            <form id="ratingForm">
-                <div class="rating-stars">
-                    <div class="stars" id="starRating">
-                        <span class="star" onclick="setRating(1)">★</span>
-                        <span class="star" onclick="setRating(2)">★</span>
-                        <span class="star" onclick="setRating(3)">★</span>
-                        <span class="star" onclick="setRating(4)">★</span>
-                        <span class="star" onclick="setRating(5)">★</span>
-                    </div>
-                    <p id="ratingText">Derecelendirme seçin</p>
-                </div>
-                <textarea id="reviewComment" placeholder="Yorumunuz..."></textarea>
-                <button type="submit">Gönder</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="profileModal" class="modal">
-        <div class="modal-content profile-modal">
-            <span class="close" onclick="closeProfile()">&times;</span>
-            <h2>Kullanıcı Profili</h2>
-            <div id="profileContent"></div>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
+    <!-- Leaflet JS and Initialization -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([36.8345, 28.6416], 13); // Ortaca coordinates
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        // Implement marker and modal functionality here
+    </script>
 </body>
 </html>
